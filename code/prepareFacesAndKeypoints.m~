@@ -1,0 +1,47 @@
+% Use MTCNN for face detection and save detected faces as well as facial
+% key points
+close all;
+clc;
+
+% Add paths
+%run startup.m
+% Minimum size of face
+minsize=50;
+
+% Three steps's threshold
+threshold=[0.8 0.8 0.7]; % [0.8,0.8,0.7]
+
+% Scale factor
+factor=0.65;
+
+% Read images
+testFiles = dir(dataPath);
+
+for ii=1:1
+    img=imread(strcat(testFiles(ii).folder,'/',testFiles(ii).name));
+    %img = cat(3,img,img,img);
+    tic
+    [boundingBoxes facePoints]=detectFace(img,minsize,PNet,RNet,ONet,LNet,...
+        threshold,false,factor);
+    toc
+    
+    %save(strcat('../res/detected_faces',num2str(ii),'/facePoints.mat'),'facePoints')
+    save(strcat('../res/detected_faces',num2str(ii),'/boundingboxes.mat'),'boundingBoxes')
+    nbox=size(boundingBoxes,1);
+    display(strcat('#present students: ',num2str(nbox)));
+    boxes64 = int64(boundingBoxes);
+    f=figure();
+    imshow(img);
+    hold on;
+    color = ['r','g'];
+    for ii=1:nbox
+        if sum(boxes(ii,1:4)>0)==4
+            face = img(boxes64(ii,2):boxes64(ii,4),boxes64(ii,1):boxes64(ii,3),:);
+            rectangle('Position',[boxes(ii,1:2) boxes(ii,3:4)-boxes(ii,1:2)],...
+                'Edgecolor',color(res(ii)+1),'LineWidth',2);
+            text(double(boxes(ii,1)),double(boxes(ii,2)-60),...
+                num2str(labels(ii)),'Color',color(res(ii)+1),'FontSize',15);
+            imwrite(face,strcat(savingPath,'/',num2str(ii),'.jpg'));
+        end
+    end
+end
